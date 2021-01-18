@@ -31,6 +31,36 @@ router.get("/vehiculos", async(req,res) =>{
     }
   });
 
+  router.get("/check-marca", async(req,res) =>{
+    const [rows]=await cnn_mysql.execute(`SELECT COUNT(*) FROM TIPO_MARCA`); 
+    if(rows[0]){
+      res.json(rows);
+    }
+    else{
+      res.json({});
+    }  
+  });
+  
+  router.get("/check-linea", async(req,res) =>{
+    try {
+      const [rows]=await cnn_mysql.execute(`SELECT COUNT(*) FROM TIPO_LINEA`);
+      res.json(rows);
+      
+    } catch (error) {
+      res.status(500).json({errorCode : e.errno, message : "Error en el servidor"})
+    }
+  });
+  
+  router.get("/check-vehiculos", async(req,res) =>{
+      try {
+        const [rows]=await cnn_mysql.execute(`SELECT COUNT(*) FROM VEHICULOS`);
+        res.json(rows);
+        
+      } catch (error) {
+        res.status(500).json({errorCode : e.errno, message : "Error en el servidor"})
+      }
+    });
+
 
 
 
