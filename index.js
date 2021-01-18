@@ -14,7 +14,7 @@ app.get("/", (req,res) => {
 
 app.use("/api", control);
 
-app.set('port', process.env.PORT);
+app.set('port', process.env.PORT || 3000);
 app.listen(app.get("port"), () => {
   console.log(`Servidor corriendo en el puerto ${app.get('port')}!`);
 });
