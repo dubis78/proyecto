@@ -95,7 +95,7 @@ router.get("/max-min-vehiculos", async(req,res) =>{
 
   router.get("/tot-line-per-brand", async(req,res) =>{
     try {
-      const [rows]=await cnn_mysql.execute(`SELECT TIPO_LINEA.DESC_LINEA, tipo_marca.DESC_MARCA, TIPO_LINEA.ID_MARCA,COUNT(TIPO_LINEA.ID_MARCA) AS 'total-lineas-por-marca' FROM TIPO_LINEA INNER JOIN tipo_marca ON tipo_marca.ID_MARCA = tipo_linea.ID_MARCA GROUP by TIPO_LINEA.ID_MARCA`);
+      const [rows]=await cnn_mysql.execute(`SELECT TIPO_LINEA.DESC_LINEA, TIPO_MARCA.DESC_MARCA, TIPO_LINEA.ID_MARCA,COUNT(TIPO_LINEA.ID_MARCA) AS 'TOTAL-LINEAS-POR-MARCA' FROM TIPO_LINEA INNER JOIN TIPO_MARCA ON TIPO_MARCA.ID_MARCA = TIPO_LINEA.ID_MARCA GROUP BY TIPO_LINEA.ID_MARCA`);
       if(rows[0]){
           res.json(rows);
         }        
