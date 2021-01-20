@@ -4,10 +4,11 @@ const router = Router();
 
 router.post("/marcas", async(req,res) =>{
   try {
-    const {ID_MARCA,DESC_MARCA,ACTIVO} = req.body;
-    const [rows]=await cnn_mysql.execute(`INSERT INTO TIPO_MARCA (ID_MARCA, DESC_MARCA, ACTIVO) VALUES (?, ?, ?)`,[ID_MARCA,DESC_MARCA,ACTIVO]);
-    res.json({message: `Nueva marca agregada con id= ${rows.insertId}` });
-             
+    req.body.forEach(async(reg) => {
+      const {ID_MARCA,DESC_MARCA,ACTIVO} = reg;
+      await cnn_mysql.execute(`INSERT INTO TIPO_MARCA VALUES (?, ?, ?)`,[ID_MARCA,DESC_MARCA,ACTIVO]);
+    });
+    res.json({message: `Marcas agregadas` });             
   } catch (e) {
     res.status(500).json({errorCode : e.errno, message : "Error en el servidor"})
   }
@@ -15,10 +16,11 @@ router.post("/marcas", async(req,res) =>{
 
 router.post("/lineas", async(req,res) =>{
   try {
-    const {ID_LINEA, DESC_LINEA, ID_MARCA, ACTIVO} = req.body;
-    const [rows]=await cnn_mysql.execute(`INSERT INTO TIPO_LINEA (ID_LINEA, DESC_LINEA, ID_MARCA, ACTIVO) VALUES (?, ?, ?, ?)`,[ID_LINEA, DESC_LINEA, ID_MARCA, ACTIVO]);
-    res.json({message: `Nueva linea agregada con id= ${rows.insertId}` });
-             
+    req.body.forEach(async(reg) => {
+      const {ID_LINEA, DESC_LINEA, ID_MARCA, ACTIVO} = reg;
+      await cnn_mysql.execute(`INSERT INTO TIPO_LINEA VALUES (?, ?, ?, ?)`,[ID_LINEA, DESC_LINEA, ID_MARCA, ACTIVO]);
+    });
+    res.json({message: `Lineas agregadas` });             
   } catch (e) {
     res.status(500).json({errorCode : e.errno, message : "Error en el servidor"})
   }
@@ -27,10 +29,11 @@ router.post("/lineas", async(req,res) =>{
 
 router.post("/vehiculos", async(req,res) =>{
   try {
-    const {NRO_PLACA, ID_LINEA, MODELO, FECHA_VEN_SEGURO, FECHA_VEN_TECNOMECANICA, FECHA_VEN_CONTRATODO} = req.body;
-    const [rows]=await cnn_mysql.execute(`INSERT INTO VEHICULOS (NRO_PLACA, ID_LINEA, MODELO, FECHA_VEN_SEGURO, FECHA_VEN_TECNOMECANICA, FECHA_VEN_CONTRATODO) VALUES (?, ?, ?, ?, ?, ?)`,[NRO_PLACA, ID_LINEA, MODELO, FECHA_VEN_SEGURO, FECHA_VEN_TECNOMECANICA, FECHA_VEN_CONTRATODO]);
-    res.json({message: `Nuevo vehiculo agregado con id= ${rows.insertId}` });
-             
+    req.body.forEach(async(reg) => {
+      const {NRO_PLACA, ID_LINEA, MODELO, FECHA_VEN_SEGURO, FECHA_VEN_TECNOMECANICA, FECHA_VEN_CONTRATODO} = reg;
+      await cnn_mysql.execute(`INSERT INTO VEHICULOS VALUES (?, ?, ?, ?, ?, ?)`,[NRO_PLACA, ID_LINEA, MODELO, FECHA_VEN_SEGURO, FECHA_VEN_TECNOMECANICA, FECHA_VEN_CONTRATODO]);
+    });
+    res.json({message: `vehiculos agregadas`});             
   } catch (e) {
     res.status(500).json({errorCode : e.errno, message : "Error en el servidor"})
   }

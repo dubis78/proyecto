@@ -13,3 +13,4 @@ const promiseConnection_mysql=connection_mysql.promise();
 module.exports = {
     cnn_mysql : promiseConnection_mysql
 }
+
