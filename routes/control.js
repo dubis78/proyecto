@@ -59,7 +59,7 @@ router.get("/tipos-linea", async(req,res) =>{
 
 router.get("/vehiculos", async(req,res) =>{
     try {
-      const [rows]=await cnn_mysql.execute(`SELECT NRO_PLACA, ID_LINEA, MODELO AS '#ModeloVehiculo', FECHA_VEN_SEGURO, FECHA_VEN_TECNOMECANICA, FECHA_VEN_CONTRATODO FROM VEHICULOS`);
+      const [rows]=await cnn_mysql.execute(`SELECT NRO_PLACA, ID_LINEA, MODELO AS '#ModeloVehiculo', FECHA_VEN_SEGURO, FECHA_VEN_TECNOMECANICA, FECHA_VEN_CONTRATODO FROM VEHICULOS WHERE FECHA_VEN_SEGURO != 'NULL'`);
       res.json(rows);
       
     } catch (e) {
