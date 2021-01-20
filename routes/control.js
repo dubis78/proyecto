@@ -173,39 +173,6 @@ router.get("/rang-mod", async(req,res) =>{
 
 
 
-router.patch("/update-linea/:id", async(req,res) =>{
-  try {
-    if (Object.keys(req.body).length > 0) { //Object.keys retorna un array de los "indices" de los elementos de un object o array
-      const id = req.params.id
-      let SQL = 'UPDATE TIPO_LINEA SET '
-      const params = []
-
-      for (const elment in req.body) {
-          SQL += `${elment} = ?, `
-          params.push(req.body[elment])
-      }
-      SQL = SQL.slice(0, -2)
-      SQL += ` WHERE ID_LINEA = ?`
-      params.push(id)
-      console.log(SQL, params)
-      let [rows] = await cnn_mysql.execute(SQL, params)
-      
-      if (rows.affectedRows > 0) {
-          [rows] = await cnn_mysql.query(`SELECT * FROM TIPO_LINEA WHERE ID_LINEA = ?`, [id])
-          res.json(rows[0])
-      }else{
-          res.json({})
-      }
-  } 
-    else {
-      res.status(401).json({ message: 'No existe campos a modificar' })
-    }     
-  } 
-  catch (e) {
-    res.status(500).json({errorCode : e.errno, message : "Error en el servidor"})
-  }
-}); 
-
 router.patch("/update-marca/:id", async(req,res) =>{
   try {
     if (Object.keys(req.body).length > 0) { //Object.keys retorna un array de los "indices" de los elementos de un object o array
@@ -225,6 +192,39 @@ router.patch("/update-marca/:id", async(req,res) =>{
       
       if (rows.affectedRows > 0) {
           [rows] = await cnn_mysql.query(`SELECT * FROM TIPO_MARCA WHERE ID_MARCA = ?`, [id])
+          res.json(rows[0])
+      }else{
+          res.json({})
+      }
+  } 
+    else {
+      res.status(401).json({ message: 'No existe campos a modificar' })
+    }     
+  } 
+  catch (e) {
+    res.status(500).json({errorCode : e.errno, message : "Error en el servidor"})
+  }
+}); 
+
+router.patch("/update-linea/:id", async(req,res) =>{
+  try {
+    if (Object.keys(req.body).length > 0) { //Object.keys retorna un array de los "indices" de los elementos de un object o array
+      const id = req.params.id
+      let SQL = 'UPDATE TIPO_LINEA SET '
+      const params = []
+
+      for (const elment in req.body) {
+          SQL += `${elment} = ?, `
+          params.push(req.body[elment])
+      }
+      SQL = SQL.slice(0, -2)
+      SQL += ` WHERE ID_LINEA = ?`
+      params.push(id)
+      console.log(SQL, params)
+      let [rows] = await cnn_mysql.execute(SQL, params)
+      
+      if (rows.affectedRows > 0) {
+          [rows] = await cnn_mysql.query(`SELECT * FROM TIPO_LINEA WHERE ID_LINEA = ?`, [id])
           res.json(rows[0])
       }else{
           res.json({})
