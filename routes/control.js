@@ -2,6 +2,42 @@ const {Router}=require('express');
 const {cnn_mysql}=require('../config/database');
 const router = Router();
 
+router.post("/marcas", async(req,res) =>{
+  try {
+    const {ID_MARCA,DESC_MARCA,ACTIVO} = req.body;
+    const [rows]=await cnn_mysql.execute(`INSERT INTO TIPO_MARCA (ID_MARCA, DESC_MARCA, ACTIVO) VALUES (?, ?, ?)`,[ID_MARCA,DESC_MARCA,ACTIVO]);
+    res.json({message: `Nueva marca agregada con id= ${rows.insertId}` });
+             
+  } catch (e) {
+    res.status(500).json({errorCode : e.errno, message : "Error en el servidor"})
+  }
+}); 
+
+router.post("/lineas", async(req,res) =>{
+  try {
+    const {ID_LINEA, DESC_LINEA, ID_MARCA, ACTIVO} = req.body;
+    const [rows]=await cnn_mysql.execute(`INSERT INTO TIPO_LINEA (ID_LINEA, DESC_LINEA, ID_MARCA, ACTIVO) VALUES (?, ?, ?, ?)`,[ID_LINEA, DESC_LINEA, ID_MARCA, ACTIVO]);
+    res.json({message: `Nueva linea agregada con id= ${rows.insertId}` });
+             
+  } catch (e) {
+    res.status(500).json({errorCode : e.errno, message : "Error en el servidor"})
+  }
+}); 
+
+
+router.post("/vehiculos", async(req,res) =>{
+  try {
+    const {NRO_PLACA, ID_LINEA, MODELO, FECHA_VEN_SEGURO, FECHA_VEN_TECNOMECANICA, FECHA_VEN_CONTRATODO} = req.body;
+    const [rows]=await cnn_mysql.execute(`INSERT INTO VEHICULOS (NRO_PLACA, ID_LINEA, MODELO, FECHA_VEN_SEGURO, FECHA_VEN_TECNOMECANICA, FECHA_VEN_CONTRATODO) VALUES (?, ?, ?, ?, ?, ?)`,[NRO_PLACA, ID_LINEA, MODELO, FECHA_VEN_SEGURO, FECHA_VEN_TECNOMECANICA, FECHA_VEN_CONTRATODO]);
+    res.json({message: `Nuevo vehiculo agregado con id= ${rows.insertId}` });
+             
+  } catch (e) {
+    res.status(500).json({errorCode : e.errno, message : "Error en el servidor"})
+  }
+});
+
+
+
 router.get("/tipos-marca", async(req,res) =>{
   const [rows]=await cnn_mysql.execute(`SELECT ID_MARCA, DESC_MARCA, IF(ACTIVO = 'S', 'ACTIVO', 'INACTIVO') AS ESTADO FROM TIPO_MARCA WHERE DESC_MARCA != 'NULL'`); 
   if(rows[0]){res.json(rows);
@@ -23,7 +59,7 @@ router.get("/tipos-linea", async(req,res) =>{
 
 router.get("/vehiculos", async(req,res) =>{
     try {
-      const [rows]=await cnn_mysql.execute(`SELECT NRO_PLACA, ID_LINEA, MODELO AS '#ModeloVehiculo' FROM VEHICULOS`);
+      const [rows]=await cnn_mysql.execute(`SELECT NRO_PLACA, ID_LINEA, MODELO AS '#ModeloVehiculo', FECHA_VEN_SEGURO, FECHA_VEN_TECNOMECANICA, FECHA_VEN_CONTRATODO FROM VEHICULOS`);
       res.json(rows);
       
     } catch (e) {
