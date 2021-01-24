@@ -2,6 +2,71 @@ const {Router}=require('express');
 const {cnn_mysql}=require('../config/database');
 const router = Router();
 
+
+const vetData=(rBody,rParams,rQuery)=>{
+  const data=rBody.concat(rParams.concat(rQuery));
+  if(data.length>0){
+    return data;
+  }
+  else{
+    return [0];
+  }
+  // const id = req.params.id
+  //     let SQL = 'UPDATE TIPO_MARCA SET '
+  //     const params = []
+
+  //     for (const elment in req.body) {
+  //         SQL += `${elment} = ?, `
+  //         params.push(req.body[elment])
+  //     }
+  //     SQL = SQL.slice(0, -2)
+  //     SQL += ` WHERE ID_MARCA = ?`
+  //     params.push(id)
+  //     console.log(SQL, params)
+  //     let [rows] = await cnn_mysql.execute(SQL, params)
+}
+
+const consult=async(sql,req)=>{
+  try {
+    const rBody=Object.values(req.body),rParams=Object.values(req.params),rQuery=Object.values(req.query);
+    const data=vetData(rBody,rParams,rQuery);
+    console.log(data);
+    const [rows]=await cnn_mysql.execute(sql,data);
+    return rows;
+  } catch (e) {
+    return {errorCode : e.errno, message : "Error en el servidor"};
+  }
+}
+
+const methodSelector=(method,endpoint,sql)=>{
+  switch (method) {
+    case 'get':
+      router.get(endpoint,async(req,res)=>{
+        res.send(await consult(sql,req));
+      });
+      break;
+    case 'post':
+      router.post(endpoint,async(req,res)=>{
+        res.send(await consult(sql,req));
+      });
+    break;
+    case 'patch': 
+    router.patch(endpoint,async(req,res)=>{
+      res.send(await consult(sql,req));
+    });
+      break; 
+    case 'delete':
+      router.delete(endpoint,async(req,res)=>{
+        res.send(await consult(sql,req));
+      });
+      break;
+    default:
+      console.log('default');
+  }
+}
+
+
+
 router.post("/marcas", async(req,res) =>{
   try {
     req.body.forEach(async(reg) => {
@@ -26,7 +91,6 @@ router.post("/lineas", async(req,res) =>{
   }
 }); 
 
-
 router.post("/vehiculos", async(req,res) =>{
   try {
     req.body.forEach(async(reg) => {
@@ -40,35 +104,11 @@ router.post("/vehiculos", async(req,res) =>{
 });
 
 
+methodSelector('get','/tipos-marca',`SELECT ID_MARCA, DESC_MARCA, IF(ACTIVO = 'S', 'ACTIVO', 'INACTIVO') AS ESTADO FROM TIPO_MARCA WHERE DESC_MARCA != 'NULL'`);
 
-router.get("/tipos-marca", async(req,res) =>{
-  const [rows]=await cnn_mysql.execute(`SELECT ID_MARCA, DESC_MARCA, IF(ACTIVO = 'S', 'ACTIVO', 'INACTIVO') AS ESTADO FROM TIPO_MARCA WHERE DESC_MARCA != 'NULL'`); 
-  if(rows[0]){res.json(rows);
-  }
-  else{
-    res.json({});
-  }  
-});
+methodSelector('get','/tipos-linea',`SELECT ID_LINEA, DESC_LINEA, ID_MARCA, IF(ACTIVO = 'S', 'ACTIVO', 'INACTIVO') AS ESTADO  FROM TIPO_LINEA WHERE DESC_LINEA != 'NULL'`);
 
-router.get("/tipos-linea", async(req,res) =>{
-  try {
-    const [rows]=await cnn_mysql.execute(`SELECT ID_LINEA, DESC_LINEA, ID_MARCA, IF(ACTIVO = 'S', 'ACTIVO', 'INACTIVO') AS ESTADO  FROM TIPO_LINEA WHERE DESC_LINEA != 'NULL'`);
-    res.json(rows);
-    
-  } catch (e) {
-    res.status(500).json({errorCode : e.errno, message : "Error en el servidor"})
-  }
-});
-
-router.get("/vehiculos", async(req,res) =>{
-    try {
-      const [rows]=await cnn_mysql.execute(`SELECT NRO_PLACA, ID_LINEA, MODELO AS '#ModeloVehiculo', FECHA_VEN_SEGURO, FECHA_VEN_TECNOMECANICA, FECHA_VEN_CONTRATODO FROM VEHICULOS WHERE FECHA_VEN_SEGURO != 'NULL'`);
-      res.json(rows);
-      
-    } catch (e) {
-      res.status(500).json({errorCode : e.errno, message : "Error en el servidor"})
-    }
-  });
+methodSelector('get','/vehiculos',`SELECT NRO_PLACA, ID_LINEA, MODELO AS '#ModeloVehiculo', FECHA_VEN_SEGURO, FECHA_VEN_TECNOMECANICA, FECHA_VEN_CONTRATODO FROM VEHICULOS WHERE FECHA_VEN_SEGURO != 'NULL'`);
 
 
 
@@ -121,58 +161,13 @@ router.get("/check-vehiculos", async(req,res) =>{
 
 
 
-router.get("/max-min-vehiculos", async(req,res) =>{
-    try {
-      const [rows]=await cnn_mysql.execute(`SELECT MIN(MODELO) AS 'modelo_min', MAX(MODELO) AS 'modelo_max' FROM VEHICULOS`);
-      if(rows[0]){
-          res.json(rows[0]);
-        }        
-    } catch (e) {
-      res.status(500).json({errorCode : e.errno, message : "Error en el servidor"})
-    }
-  });
+methodSelector('get','/max-min-vehiculos',`SELECT MIN(MODELO) AS 'modelo_min', MAX(MODELO) AS 'modelo_max' FROM VEHICULOS`);
 
+methodSelector('get','/tot-line-per-brand',`SELECT TIPO_LINEA.DESC_LINEA, TIPO_MARCA.DESC_MARCA, TIPO_LINEA.ID_MARCA,COUNT(TIPO_LINEA.ID_MARCA) AS 'TOTAL-LINEAS-POR-MARCA' FROM TIPO_LINEA INNER JOIN TIPO_MARCA ON TIPO_MARCA.ID_MARCA = TIPO_LINEA.ID_MARCA GROUP BY TIPO_LINEA.ID_MARCA`);
 
+methodSelector('get','/rang-date-exp',`SELECT * FROM VEHICULOS WHERE FECHA_VEN_SEGURO BETWEEN ? AND ?`);
 
-router.get("/tot-line-per-brand", async(req,res) =>{
-  try {
-    const [rows]=await cnn_mysql.execute(`SELECT TIPO_LINEA.DESC_LINEA, TIPO_MARCA.DESC_MARCA, TIPO_LINEA.ID_MARCA,COUNT(TIPO_LINEA.ID_MARCA) AS 'TOTAL-LINEAS-POR-MARCA' FROM TIPO_LINEA INNER JOIN TIPO_MARCA ON TIPO_MARCA.ID_MARCA = TIPO_LINEA.ID_MARCA GROUP BY TIPO_LINEA.ID_MARCA`);
-    if(rows[0]){
-        res.json(rows);
-      }        
-  } catch (e) {
-    res.status(500).json({errorCode : e.errno, message : "Error en el servidor"})
-  }
-});
-
-
-
-router.get("/rang-date-exp", async(req,res) =>{
-  try {
-    const {start,end} = req.query;
-    console.log(`SELECT * FROM 'VEHICULOS' WHERE FECHA_VEN_SEGURO BETWEEN '${start}' AND '${end}'`);
-    const [rows]=await cnn_mysql.execute(`SELECT * FROM VEHICULOS WHERE FECHA_VEN_SEGURO BETWEEN ? AND ?`,[start,end]);
-    if(rows[0]){
-        res.json(rows);
-      }        
-  } catch (e) {
-    res.status(500).json({errorCode : e.errno, message : "Error en el servidor"})
-  }
-});
-
-
-
-router.get("/rang-mod", async(req,res) =>{
-  try {
-    const {start,end} = req.query;
-    const [rows]=await cnn_mysql.execute(`SELECT * FROM VEHICULOS WHERE MODELO BETWEEN '${start}' AND '${end}'`);
-    if(rows[0]){
-        res.json(rows);
-      }        
-  } catch (e) {
-    res.status(500).json({errorCode : e.errno, message : "Error en el servidor"})
-  }
-}); 
+methodSelector('get','/rang-mod',`SELECT * FROM VEHICULOS WHERE MODELO BETWEEN ? AND ?`);
 
 
 
@@ -301,25 +296,9 @@ router.delete("/marca/:id", async(req,res) =>{
 
 
 
-router.get("/placa-mod-lin-marc", async(req,res) =>{
-  try {
-    const [rows]=await cnn_mysql.execute(`SELECT VEHICULOS.NRO_PLACA, VEHICULOS.MODELO, TIPO_LINEA.DESC_LINEA, TIPO_MARCA.DESC_MARCA FROM VEHICULOS INNER JOIN TIPO_LINEA ON TIPO_LINEA.ID_LINEA = VEHICULOS.ID_LINEA INNER JOIN TIPO_MARCA ON TIPO_MARCA.ID_MARCA = TIPO_LINEA.ID_MARCA`);
-    res.json(rows);
-    
-  } catch (e) {
-    res.status(500).json({errorCode : e.errno, message : "Error en el servidor"})
-  }
-});
+methodSelector('get','/placa-mod-lin-marc',`SELECT VEHICULOS.NRO_PLACA, VEHICULOS.MODELO, TIPO_LINEA.DESC_LINEA, TIPO_MARCA.DESC_MARCA FROM VEHICULOS INNER JOIN TIPO_LINEA ON TIPO_LINEA.ID_LINEA = VEHICULOS.ID_LINEA INNER JOIN TIPO_MARCA ON TIPO_MARCA.ID_MARCA = TIPO_LINEA.ID_MARCA`);
 
-router.get("/placa-mod-lin-marc-s", async(req,res) =>{
-  try {
-    const [rows]=await cnn_mysql.execute(`SELECT VEHICULOS.NRO_PLACA, VEHICULOS.MODELO, TIPO_LINEA.DESC_LINEA, TIPO_MARCA.DESC_MARCA FROM VEHICULOS INNER JOIN TIPO_LINEA ON TIPO_LINEA.ID_LINEA = VEHICULOS.ID_LINEA INNER JOIN TIPO_MARCA ON TIPO_MARCA.ID_MARCA = TIPO_LINEA.ID_MARCA WHERE TIPO_LINEA.ACTIVO = 'S'`);
-    res.json(rows);
-    
-  } catch (e) {
-    res.status(500).json({errorCode : e.errno, message : "Error en el servidor"})
-  }
-});
+methodSelector('get','/placa-mod-lin-marc-s',`SELECT VEHICULOS.NRO_PLACA, VEHICULOS.MODELO, TIPO_LINEA.DESC_LINEA, TIPO_MARCA.DESC_MARCA FROM VEHICULOS INNER JOIN TIPO_LINEA ON TIPO_LINEA.ID_LINEA = VEHICULOS.ID_LINEA INNER JOIN TIPO_MARCA ON TIPO_MARCA.ID_MARCA = TIPO_LINEA.ID_MARCA WHERE TIPO_LINEA.ACTIVO = 'S'`);
 
 
 
@@ -377,25 +356,8 @@ router.get("/tot-estado", async(req,res) =>{
 
 
 
-router.get("/inner-join", async(req,res) =>{
-  try {
-    const [rows]=await cnn_mysql.execute(`SELECT VEHICULOS.NRO_PLACA, VEHICULOS.MODELO, TIPO_LINEA.DESC_LINEA, TIPO_MARCA.DESC_MARCA FROM VEHICULOS INNER JOIN TIPO_LINEA ON TIPO_LINEA.ID_LINEA = VEHICULOS.ID_LINEA INNER JOIN TIPO_MARCA ON TIPO_MARCA.ID_MARCA = TIPO_LINEA.ID_MARCA`);
-    res.json(rows);
-    
-  } catch (e) {
-    res.status(500).json({errorCode : e.errno, message : "Error en el servidor"})
-  }
-});
+methodSelector('get','/inner-join',`SELECT VEHICULOS.NRO_PLACA, VEHICULOS.MODELO, TIPO_LINEA.DESC_LINEA, TIPO_MARCA.DESC_MARCA FROM VEHICULOS INNER JOIN TIPO_LINEA ON TIPO_LINEA.ID_LINEA = VEHICULOS.ID_LINEA INNER JOIN TIPO_MARCA ON TIPO_MARCA.ID_MARCA = TIPO_LINEA.ID_MARCA`);
 
-router.get("/left-join", async(req,res) =>{
-  try {
-    const [rows]=await cnn_mysql.execute(`SELECT VEHICULOS.NRO_PLACA, VEHICULOS.MODELO, TIPO_LINEA.DESC_LINEA, TIPO_MARCA.DESC_MARCA FROM VEHICULOS LEFT JOIN TIPO_LINEA ON TIPO_LINEA.ID_LINEA = VEHICULOS.ID_LINEA LEFT JOIN TIPO_MARCA ON TIPO_MARCA.ID_MARCA = TIPO_LINEA.ID_MARCA`);
-    res.json(rows);
-    
-  } catch (e) {
-    res.status(500).json({errorCode : e.errno, message : "Error en el servidor"})
-  }
-});
-
+methodSelector('get','/left-join',`SELECT VEHICULOS.NRO_PLACA, VEHICULOS.MODELO, TIPO_LINEA.DESC_LINEA, TIPO_MARCA.DESC_MARCA FROM VEHICULOS LEFT JOIN TIPO_LINEA ON TIPO_LINEA.ID_LINEA = VEHICULOS.ID_LINEA LEFT JOIN TIPO_MARCA ON TIPO_MARCA.ID_MARCA = TIPO_LINEA.ID_MARCA`);
 
 module.exports= router;
